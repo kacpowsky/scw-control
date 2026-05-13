@@ -24,8 +24,30 @@ def get_instance_state(instance_id):
     if result.returncode != 0:
         print(f"  ERROR: Failed to get instance info: {result.stderr.strip()}")
         return None
-    server = json.loads(result.stdout)
-    return server["state"]
+    data = json.loads(result.stdout)
+    state, mod_date = find_server_state(data)
+    if state is None:
+        print(f"  ERROR: Could not find server state in response.")
+        return None
+    print(f"  ModificationDate: {mod_date}")
+    return state
+
+
+def find_server_state(obj):
+    """Find state that sits alongside modification_date in the JSON tree."""
+    if isinstance(obj, dict):
+        if "state" in obj and "modification_date" in obj:
+            return obj["state"], obj["modification_date"]
+        for value in obj.values():
+            result = find_server_state(value)
+            if result[0] is not None:
+                return result
+    if isinstance(obj, list):
+        for item in obj:
+            result = find_server_state(item)
+            if result[0] is not None:
+                return result
+    return None, None
 
 
 def poweroff_instance(instance_id):
