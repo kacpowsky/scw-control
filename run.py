@@ -57,6 +57,12 @@ def wait_for_stopped(instance_id):
 
 
 def main():
+    required_vars = ["SCW_ACCESS_KEY", "SCW_SECRET_KEY"]
+    missing = [v for v in required_vars if not os.environ.get(v)]
+    if missing:
+        print(f"ERROR: Missing environment variables: {', '.join(missing)}")
+        sys.exit(1)
+
     instance_ids = get_instance_ids()
     print(f"Processing {len(instance_ids)} instance(s)...\n")
     errors = 0
